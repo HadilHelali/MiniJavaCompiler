@@ -1,5 +1,5 @@
 import os
-from subprocess import check_call, STDOUT
+import subprocess 
 
 def write_file(content,filename):
     f = open(filename,"w")
@@ -39,10 +39,15 @@ def removeStrings(filename,string):
 
 def execute_command(command , inputfile , outputfile ):
     with open(inputfile) as file, open(outputfile, 'w') as outfile:
-        check_call([command],stdin=file, stdout=outfile, stderr=STDOUT)
-
+        try:
+            subprocess.check_call([command],stdin=file, stdout=outfile, stderr=outfile)
+        except subprocess.CalledProcessError as e:
+            # Handle the error
+            remove_empty_lines(outputfile)
+            return read_file(outputfile)
+    
     remove_empty_lines(outputfile)
-    removeStrings(outputfile,'COMMENT BLOCK')
+    #removeStrings(outputfile,'COMMENT BLOCK')
 
     return read_file(outputfile)
 

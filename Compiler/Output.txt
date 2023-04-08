@@ -1,4 +1,1 @@
-
-
-
-syntax error, unexpected MC_CLASS, expecting id or POINT_VIRGULE 29
+fonction non declaree à la ligne 10

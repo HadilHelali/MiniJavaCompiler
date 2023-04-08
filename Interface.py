@@ -25,7 +25,7 @@ with col2 :
 
 if btn : 
     write_file(txt,"Compiler/Script.txt")
-    output = execute_command( "Compiler/Analyseur_synx.exe" , "Compiler/Script.txt" , "Compiler/Output.txt" )
+    output = execute_command( "Compiler_Files/Compiler.exe" , "Compiler/Script.txt" , "Compiler/Output.txt" )
     st.subheader("Output")
     if output.isspace() or not any(output.splitlines()):
         st.success('Your script does not contain any errors', icon="✅")
