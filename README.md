@@ -16,7 +16,8 @@ python -m streamlit run Interface.py
     │   ├── Syntaxique.y                 # YACC/Bison file containing the syntax rules  
     │   └── Semantique.c                 # C file containing the semantic rules 
     ├── Interface.py                     # used to create the interface 
-    └── utils.py                         # contains a set of functions used in the Interface.py file
+    └── utils.py                         # contains a set of functions used in 
+                                         # the Interface.py file
 
 ```
 * `Lexical.lex` :  is used to generate a lexical analyzer or a lexer, which is responsible for breaking down the input source code into smaller pieces called tokens. These tokens are then passed on to the next stage of the compiler for further processing. The lexer performs operations such as skipping whitespace and comments, identifying keywords, identifiers, operators, and literals, and generating a token stream.
