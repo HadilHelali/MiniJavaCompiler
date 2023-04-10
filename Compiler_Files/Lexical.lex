@@ -3,7 +3,7 @@
  #include <stdio.h>	
  #include <stdlib.h>	
  		
- #include "Compte_Rendu.tab.h"	                                                                         	
+ #include "Syntaxique.tab.h"	                                                                         	
  /* Local stuff we need here... */	
 #include <math.h>	 			
 %}
@@ -72,13 +72,13 @@ Op_Aff "="
 "/*"          { BEGIN(COMMENT); nb_par++; line = yylineno ; }
 <COMMENT>.    { /* Ignore anything within a comment */ }
 <COMMENT>"*/" { BEGIN(INITIAL); nb_par--;}
-{COMMENT_LINE}         								                                 {printf("COMMENT LINE");}
+{COMMENT_LINE}         								                         {printf("COMMENT LINE");}
 {MC_IF}                                                                              {return MC_IF ;}
 {MC_ELSE}                                                                            {return MC_ELSE ;}
 {MC_WHILE}                                                                           {return MC_WHILE ;}
 {MC_CLASS}                                                                           {return MC_CLASS ;}
 {MC_EXTENDS}                                                                         {return MC_EXTENDS ;}
-{MC_RETURN}                                                                          {return MC_RETURN ;}
+{MC_RETURN}                                                                          {yylval.sval = strdup(yytext); return MC_RETURN ;}
 {MC_NEW}                                                                             {return MC_NEW ;}
 {MC_THIS}                                                                            {return MC_THIS ;}
 {MC_PRINT}                                                                           {return MC_PRINT ;}
@@ -86,8 +86,8 @@ Op_Aff "="
 {MC_PUBLIC}                                                                          {return MC_PUBLIC ;}
 {MC_MAIN_CLASS}                                                                      {return MC_MAIN_CLASS ;}
 {INTEGER_LITERAL}                                                                    {return INTEGER_LITERAL;}
-{Type}                                                                               {return Type;}
-{id}                                                                                 {return id;}
+{Type}                                                                               {yylval.sval = strdup(yytext); return Type;}
+{id}                                                                                 {yylval.sval = strdup(yytext); return id;}
 {String_Tab}                                                                         {return String_Tab;}
 {Operation}                                                                          {return Operation;}
 {Parenthese_Ouvrante}                                                                {return Parenthese_Ouvrante;}
@@ -98,7 +98,7 @@ Op_Aff "="
 {ACCOLADE_Fermante}                                                                  {return ACCOLADE_Fermante;}
 {BOOLEAN_LITERAL}                                                                    {return BOOLEAN_LITERAL;}
 {POINT_VIRGULE}                                                                      {return POINT_VIRGULE;}
-{Op_Aff}	                                                                         {return Op_Aff;}
+{Op_Aff}	                                                                           {return Op_Aff;}
 "."                                                                                  {return POINT;}
 
 {iderrone}                                                                           {fprintf(stderr,"illegal identifier \'%s\' on line :%d\n",yytext,yylineno);}

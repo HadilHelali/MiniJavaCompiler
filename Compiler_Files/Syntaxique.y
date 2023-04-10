@@ -2,7 +2,7 @@
 	
 
 #include <stdio.h>	
-#include "semantique.c"
+#include "Semantique.c"
 
 int yyerror(char const *msg);	
 int yylex(void);
@@ -10,12 +10,14 @@ int yylex(void);
 extern int yylineno;
 int nbParam = 0 ;
 int nbParamExp = 0 ;
+char* funId = "newFun" ;
+char* funType = "void" ;
 
 %}
 
 %union {
   int ival;
-  char *sval;
+  char* sval;
 }
 
 %token MC_IF 
@@ -23,7 +25,7 @@ int nbParamExp = 0 ;
 %token MC_WHILE 
 %token MC_CLASS 
 %token MC_EXTENDS 
-%token MC_RETURN 
+%token <sval> MC_RETURN 
 %token MC_NEW 
 %token MC_THIS 
 %token MC_PRINT 
@@ -31,8 +33,8 @@ int nbParamExp = 0 ;
 %token MC_PUBLIC 
 %token MC_MAIN_CLASS 
 %token INTEGER_LITERAL
-%token id
-%token Type
+%token <sval> id
+%token <sval> Type
 %token String_Tab
 %token Operation
 %token Parenthese_Ouvrante
@@ -46,9 +48,6 @@ int nbParamExp = 0 ;
 %token Op_Aff
 %token POINT
 
-%type <sval> id
-%type <sval> Type
-%type <sval> MC_RETURN
 %type <sval> "void"
 
 %error-verbose
@@ -58,10 +57,10 @@ int nbParamExp = 0 ;
 Expression           : Expression Operation Expression 
                         | Expression Crochet_Ouvrante Expression Crochet_Fermante 
                         | Expression POINT MC_LENGTH
-                        | Expression POINT id Parenthese_Ouvrante expression_list Parenthese_Fermante {checkNbParameters($3,nbParamExp-1,yylineno) ; nbParamExp--; nbParamExp = 0 ;yyerrok; }  
+                        | Expression POINT id Parenthese_Ouvrante expression_list Parenthese_Fermante {/*checkNbParameters($3,nbParamExp-1,yylineno) ; nbParamExp--; nbParamExp = 0 ; */ yyerrok; }  
                         | INTEGER_LITERAL
                         | BOOLEAN_LITERAL
-                        | id {nbParamExp++ ;checkInitialise($1,yylineno) ; Initialiser($1,yylineno) ; yyerrok;}  
+                        | id {nbParamExp++ ; checkInitialise($1,yylineno) ;Initialiser($1,yylineno) ; yyerrok;}  
                         | MC_THIS
                         | MC_NEW INTEGER_LITERAL Crochet_Ouvrante Expression Crochet_Fermante
                         | MC_NEW id Parenthese_Ouvrante Parenthese_Fermante
@@ -75,12 +74,15 @@ Statement : ACCOLADE_Ouvrante Statement_list ACCOLADE_Fermante
           | MC_IF Parenthese_Ouvrante Expression Parenthese_Fermante Statement MC_ELSE Statement 
           | MC_WHILE Parenthese_Ouvrante Expression Parenthese_Fermante Statement 
           | MC_PRINT Parenthese_Ouvrante Expression Parenthese_Fermante POINT_VIRGULE 
-          | id Op_Aff Expression POINT_VIRGULE {checkUtilise($1,yylineno);Initialiser($1,yylineno) ; yyerrok;}
-          | id Crochet_Ouvrante Expression Crochet_Fermante Op_Aff Expression POINT_VIRGULE {checkUtilise($1,yylineno); Initialiser($1,yylineno) ;yyerrok;}
+          | id Op_Aff Expression POINT_VIRGULE { checkUtilise($1,yylineno); Initialiser($1,yylineno) ; yyerrok;}
+          | id Crochet_Ouvrante Expression Crochet_Fermante Op_Aff Expression POINT_VIRGULE {checkUtilise($1,yylineno); Initialiser($1,yylineno) ; yyerrok;}
 
 Statement_list : | Statement_list Statement     
 
-VarDeclaration : Type id POINT_VIRGULE {checkIdentifier($2,TOK_VARIABLE,$1,0,0,0,yylineno); checkUtiliseWar($2,yylineno) ; yyerrok;}
+type_list : Type id { nbParam = 1 ; ajouterEntree(funId,TOK_FUNCTION,funType,0,0,nbParam,yylineno); checkIdentifier($2,TOK_PARAMETER,$1,0,0,0,yylineno); yyerrok; }
+          | type_list ',' Type id {nbParam++ ; checkIdentifier($4,TOK_PARAMETER,$3,0,0,0,yylineno); modifNbParam(funId,nbParam) ; yyerrok; }
+
+VarDeclaration : Type id POINT_VIRGULE { checkIdentifier($2, TOK_VARIABLE, $1, 0, 0, 0, yylineno); checkUtiliseWar($2,yylineno) ; yyerrok;}
                | id POINT_VIRGULE {yyerror (" Missing Type on line : "); YYABORT}
                | Type id  {yyerror (" Missing ; on line : "); YYABORT}
                | Type POINT_VIRGULE {yyerror (" Missing id on line : "); YYABORT}
@@ -88,13 +90,11 @@ VarDeclaration : Type id POINT_VIRGULE {checkIdentifier($2,TOK_VARIABLE,$1,0,0,0
 VarDeclaration_list : | VarDeclaration_list VarDeclaration
 
 
-MethodDeclaration : MC_PUBLIC Type id Parenthese_Ouvrante type_list Parenthese_Fermante ACCOLADE_Ouvrante VarDeclaration_list Statement_list MC_RETURN Expression POINT_VIRGULE ACCOLADE_Fermante {DestroyLocalDic(); ajouterEntree($3,TOK_FUNCTION,$2,0,0,nbParam,yylineno); checkReturn($2,$10,yylineno) ; nbParam = 0 ;yyerrok;}
-                  | MC_PUBLIC "void" id Parenthese_Ouvrante type_list Parenthese_Fermante ACCOLADE_Ouvrante VarDeclaration_list Statement_list ACCOLADE_Fermante {DestroyLocalDic(); ajouterEntree($3,TOK_FUNCTION,$2,0,0,nbParam,yylineno); checkReturn($2," ",yylineno) ; nbParam = 0 ;yyerrok;}
+MethodDeclaration : MC_PUBLIC Type id Parenthese_Ouvrante type_list Parenthese_Fermante ACCOLADE_Ouvrante VarDeclaration_list Statement_list MC_RETURN Expression POINT_VIRGULE ACCOLADE_Fermante { if (nbParam == 0) ajouterEntree($3,TOK_FUNCTION,$2,0,0,nbParam,yylineno); else modifIDType($3,$2); checkReturn($2,$10,yylineno) ; AfficherTab(); DestroyLocalDic(); nbParam = 0 ;yyerrok;}
+                  | MC_PUBLIC "void" id Parenthese_Ouvrante type_list Parenthese_Fermante ACCOLADE_Ouvrante VarDeclaration_list Statement_list ACCOLADE_Fermante { if (nbParam == 0) ajouterEntree($3,TOK_FUNCTION,"void",0,0,nbParam,yylineno); else modifIDType($3,"void"); checkReturn($2," ",yylineno); AfficherTab() ; DestroyLocalDic(); nbParam = 0 ;yyerrok;}
 MethodDeclaration_list : | MethodDeclaration_list MethodDeclaration
 
 
-type_list : Type id {nbParam = 1 ; checkIdentifier($2,TOK_PARAMETER,$1,0,0,0,yylineno); yyerrok; }
-          | type_list ',' Type id {nbParam++ ; checkIdentifier($4,TOK_PARAMETER,$3,0,0,0,yylineno); yyerrok; }
 
 
 ClassDeclaration : MC_CLASS id class_extend ACCOLADE_Ouvrante VarDeclaration_list MethodDeclaration_list ACCOLADE_Fermante
@@ -108,9 +108,9 @@ class_extend : | MC_EXTENDS id
                | MC_EXTENDS {yyerror (" Missing id on line : "); YYABORT}
                |  id {yyerror (" Missing 'extends' on line : "); YYABORT}
 
-MainClass : MC_CLASS id ACCOLADE_Ouvrante MC_MAIN_CLASS Parenthese_Ouvrante String_Tab id Parenthese_Fermante ACCOLADE_Ouvrante Statement ACCOLADE_Fermante ACCOLADE_Fermante
+MainClass : MC_CLASS id ACCOLADE_Ouvrante MC_MAIN_CLASS Parenthese_Ouvrante String_Tab id Parenthese_Fermante ACCOLADE_Ouvrante Statement ACCOLADE_Fermante ACCOLADE_Fermante { checkIdentifier($7, TOK_PARAMETER,"String[]", 0, 0, 0, yylineno); checkUtiliseWar($7,yylineno) ; yyerrok;}
 
-Program	  :  MainClass  ClassDeclaration_list
+Program	  :  MainClass  ClassDeclaration_list { AfficherTab();}
 
 
 %% 

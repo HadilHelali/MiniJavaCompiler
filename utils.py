@@ -13,7 +13,7 @@ def read_file(filename):
 
 def remove_files():
     dir_path = "Compiler/"
-    files_to_remove = ["Script.txt", "Output.txt"]
+    files_to_remove = ["Script.txt", "Output.txt" , "Error.txt"]
     for file in files_to_remove:
         file_path = os.path.join(dir_path, file)
         os.remove(file_path)
@@ -38,16 +38,33 @@ def removeStrings(filename,string):
         file.write(modified_contents)
 
 def execute_command(command , inputfile , outputfile ):
-    with open(inputfile) as file, open(outputfile, 'w') as outfile:
+    with open(inputfile) as file, open(outputfile, 'w') as outfile , open("Compiler/Error.txt", 'w') as errfile:
         try:
-            subprocess.check_call([command],stdin=file, stdout=outfile, stderr=outfile)
+            subprocess.check_call([command],stdin=file, stdout=outfile, stderr=errfile)
         except subprocess.CalledProcessError as e:
             # Handle the error
-            remove_empty_lines(outputfile)
-            return read_file(outputfile)
+            print('error')
     
-    remove_empty_lines(outputfile)
     #removeStrings(outputfile,'COMMENT BLOCK')
 
-    return read_file(outputfile)
+    return read_file(outputfile) , read_file("Compiler/Error.txt")
 
+
+def remove_dupp(sam_list):
+    result = [] 
+    for i in sam_list: 
+        if i not in result: 
+            result.append(i)
+    result.pop(0)
+    return result
+
+def get_Table():
+    tableEl = []
+    table = read_file("Compiler/Output.txt")
+    lines = table.split('\n')
+    lines.pop()
+    for line in lines:
+        line = line.split('|')
+        tableEl.append(line)
+    
+    return remove_dupp(tableEl)

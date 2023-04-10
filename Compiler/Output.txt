@@ -1,1 +1,0 @@
-fonction non declaree à la ligne 10

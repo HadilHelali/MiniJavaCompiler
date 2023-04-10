@@ -9,6 +9,7 @@
 #define INT_TAB 3
 #define STRING_TAB 4
 #define ID_TYPE 5
+#define VOID 6
 
 // taille du dictionnaire :
 #define TAILLE_INITIALE_DICO 50
@@ -33,6 +34,15 @@ int Nb_param ;
 
 ENTREE_DICO * dico ;
 int maxDico, sommet, base;
+int entree = 0 ;
+char* IdFun = "" ;
+int ligneFun = 0 ;
+
+void AfficherTab(){
+ for (int i=0; i < sommet ; i++ ) {
+     printf("%s|%d|%d|%d|%d|%d\n", dico[i].identif, dico[i].Classe, dico[i].Type, dico[i].Is_Init, dico[i].Is_used, dico[i].Nb_param);
+ }
+}
 
 // Gestion d'erreurs
 void erreurFatale(char * message, int ligne)
@@ -64,7 +74,7 @@ void creerDico() {
 maxDico = TAILLE_INITIALE_DICO;
 dico = malloc(maxDico * sizeof(ENTREE_DICO));
 if (dico == NULL)
-erreurFatale("Erreur interne (pas assez de memoire)",0);
+     erreurFatale("Error : Erreur interne (pas assez de memoire)", 0);
 sommet = base = 0;
 }
 
@@ -73,22 +83,28 @@ void agrandirDico() {
 maxDico = maxDico + INCREMENT_TAILLE_DICO;
 dico = realloc(dico, maxDico);
 if (dico == NULL)
-erreurFatale("Erreur interne (pas assez de memoire)",0);
+erreurFatale("Error : Erreur interne (pas assez de memoire)", 0);
 }
 
 // Ajout d'une variable au dictionnaire 
 void ajouterEntree(char *identif, classe Classe , char* Type, int Is_Init, int Is_used, int Nb_param,int ligne) {
+
+if (entree == 0 ) {creerDico(); entree = 1;}
+
 if (sommet >= maxDico)
 agrandirDico();
+
 dico[sommet].identif = malloc(strlen(identif) + 1);
 if (dico[sommet].identif == NULL)
-erreurFatale("Erreur interne (pas assez de mémoire)",ligne);
-if (dico[sommet].Classe == TOK_FUNCTION)
-CreateLocalDic();
-strcpy(dico[sommet].identif, identif);
+erreurFatale("Error : Erreur interne (pas assez de mémoire)", ligne);
 dico[sommet].Classe = Classe;
 
-if ( strcmp(Type, "int") == 0)
+if (dico[sommet].Classe == TOK_FUNCTION)
+{CreateLocalDic();}
+
+strcpy(dico[sommet].identif, identif);
+
+if (strcmp(Type, "int") == 0)
 dico[sommet].Type = INT ;
 else if (strcmp(Type, "boolean") == 0) 
 dico[sommet].Type = BOOL ;
@@ -96,13 +112,17 @@ else if (strcmp(Type, "String") == 0)
 dico[sommet].Type = STRING ;
 else if (strcmp(Type, "int[]") == 0) 
 dico[sommet].Type = INT_TAB ;
-else 
+else if (strcmp(Type, "void") == 0)
+dico[sommet].Type = VOID;
+else
 dico[sommet].Type = ID_TYPE ;
+
 
 dico[sommet].Is_Init = Is_Init;
 dico[sommet].Is_used = Is_used;
 dico[sommet].Nb_param = Nb_param;
 sommet++;
+
 }
 
 // recherche d'un id 
@@ -111,33 +131,66 @@ sommet++;
 int recherche (char *identif){
     int i = sommet - 1;
     while (i >= base){
-        if (identif == dico[i].identif)
-        return i ;
+if (strcmp(dico[i].identif, identif) == 0 )
+    return i;
+i = i - 1;
     }
     return -1 ;
 }
 
+// function modification : 
 
+void modifNbParam(char* identif , int nbParam){
+    int index = recherche(identif);
+    dico[index].Nb_param = nbParam ;
+}
+
+void modifIDType(char *identif, char *Type)
+{
+    int index = recherche("newFun");
+    dico[index].identif = identif;
+    if (strcmp(Type, "int") == 0)
+    dico[index].Type = INT;
+        else if (strcmp(Type, "boolean") == 0)
+    dico[index].Type = BOOL;
+        else if (strcmp(Type, "String") == 0)
+    dico[index].Type = STRING;
+        else if (strcmp(Type, "int[]") == 0)
+    dico[index].Type = INT_TAB;
+        else if (strcmp(Type, "void") == 0)
+    dico[index].Type = VOID;
+        else
+    dico[index].Type = ID_TYPE;
+    if (strcmp(IdFun,"") != 0){
+    if (strcmp(IdFun,identif) != 0){
+    erreurFatale("Error : fonction non declaree", ligneFun);
+    } }
+}
 
 // * Contrainte 1 : Vérifier la redéfinition des variables déjà déclarées
 void checkIdentifier(char *identif, classe Classe, char *Type, int Is_Init, int Is_used, int Nb_param, int ligne)
 {
     int index = recherche(identif);
     if (index == -1)
+       {
         ajouterEntree(identif, Classe, Type, Is_Init, Is_used, Nb_param, ligne);
-    else 
-    erreurFatale("variable dejà declaree",ligne);
+       }
+    else
+    {
+        erreurFatale("Error : variable dejà declaree checkId", ligne);
+    }
 }
 
 // * Contrainte 2 : Vérifier l’appel des procédures avec les bons arguments
 void checkNbParameters (char *identif, int Nb_param,int ligne) {
     int index = recherche (identif) ;
-    if (index == -1) 
-    erreurFatale("fonction non declaree",ligne);
+    if ((index == -1) && (recherche("newFun") == -1 ))
+        erreurFatale("Error : fonction non declaree", ligne);
     else 
-    {
-        if (Nb_param != dico[index].Nb_param) 
-                erreurFatale("fonction non declaree",ligne);
+    {   IdFun = identif ;
+        ligneFun = ligne ;
+        if (Nb_param != dico[index].Nb_param)
+        erreurFatale("Error : fonction non declaree", ligne);
     }
 }
 
@@ -149,7 +202,9 @@ void checkUtilise(char *identif,int ligne) {
         {base = 0 ;
         int index2 = recherche(identif) ;
         if (index2 == -1)
-            erreurFatale("variable non declaree",ligne);
+           {
+                erreurFatale("Error : variable non declaree checkUtil", ligne);
+           }
         else 
             dico[index2].Is_used = 1 ;}
     else
@@ -162,30 +217,36 @@ void checkUtilise(char *identif,int ligne) {
 void Initialiser(char *identif , int ligne ) {
     int index = recherche(identif) ;
      if (index == -1)
-     {erreurFatale("variable non declaree",ligne);}
+     {
+        erreurFatale("Error : variable non declaree Init", ligne);
+     }
      else {
         if (dico[index].Classe == TOK_VARIABLE)
-        {
-            dico[index].Is_Init = 1;}}
+        {dico[index].Is_Init = 1;}}
 }
 
 void checkInitialise(char *identif,int ligne) {
     int b1 = base ;
     int index = recherche(identif) ;
+
     if (index == -1)
         {base = 0 ;
         int index2 = recherche(identif) ;
         if (index2 == -1)
-            erreurFatale("variable non declaree",ligne);
+            {
+            erreurFatale("Error : variable non declaree checkInit", ligne);
+            }
         else 
         {
             if ((dico[index2].Is_Init != 1) && (dico[index2].Classe == TOK_VARIABLE))
-                warning("variable non initialisee", ligne);}
+                warning("warning : variable non initialisee", ligne);
+        }
          }
     else
         {
         if ((dico[index].Is_Init != 1) && (dico[index].Classe == TOK_VARIABLE))
-            warning("variable non initialisee",ligne) ;}
+            warning("warning : variable non initialisee", ligne);
+        }
     base = b1 ;
 }
 
@@ -194,7 +255,9 @@ void checkInitialise(char *identif,int ligne) {
 void Utiliser(char *identif , int ligne ) {
     int index = recherche(identif) ;
      if (index == -1)
-     {erreurFatale("variable non declaree",ligne);}
+     {
+        erreurFatale("Error : variable non declaree Util", ligne);
+     }
      else {
         if (dico[index].Classe == TOK_VARIABLE)
         {
@@ -208,16 +271,17 @@ void checkUtiliseWar(char* identif,int ligne) {
         {base = 0 ;
         int index2 = recherche(identif) ;
         if (index2 == -1)
-            erreurFatale("variable non declaree",ligne);
+            erreurFatale("Error : variable non declaree CheckUtilWar", ligne);
         else 
         {
             if ((dico[index2].Is_used != 1) && (dico[index2].Classe == TOK_VARIABLE))
-                warning("variable non utilisee", ligne);}
+                warning("warning : variable non utilisee", ligne);}
          }
     else
         {
         if ((dico[index].Is_used != 1) && (dico[index].Classe == TOK_VARIABLE))
-            warning("variable non utilisee",ligne) ;}
+            warning("warning : variable non utilisee",ligne) ;
+        }
     base = b1 ;
 }
 
@@ -227,9 +291,11 @@ void checkReturn(char * type , char * return_char , int ligne){
     if (strcmp(type, "void") != 0)
         {
         if (strcmp(return_char, "return") != 0)
-            erreurFatale("missing return", ligne);}
+            erreurFatale("Error : missing return", ligne);
+        }
     else 
         {
         if (strcmp(return_char, "return") == 0)
-            erreurFatale("unnecessary return", ligne);}
+            erreurFatale("Error : unnecessary return", ligne);
+        }
 }
