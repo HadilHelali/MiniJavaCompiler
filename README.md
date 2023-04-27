@@ -50,5 +50,5 @@ Compilateur.exe < <Script.txt>
 
 ### Collaborators
 This project was developped by :
-| Raoua Trimech | Hadil Helali |
-| --- | --- |
+| Raoua Trimech | Hadil Helali | Soulaima Kahla |
+| --- | --- | --- |
