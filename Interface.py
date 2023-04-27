@@ -30,17 +30,18 @@ if btn :
     write_file(txt,"Compiler/Script.txt")
     output , error = execute_command( "Compiler_Files/Compilateur.exe" , "Compiler/Script.txt" , "Compiler/Output.txt" )
     st.subheader("Output")
+
     if error.isspace() or not any(error.splitlines()):
         st.success('Your script does not contain any errors', icon="✅")
     else :
-        if ("warning" in error):
-            st.warning(error, icon="⚠️")
-        else :
-            st.error(error, icon="🚨")
-    st.subheader("Table de Symbole")
-    st.info('**Type** : (0) int | (1) boolean | (2) String | (3) tableau de int | (4) tableau de String | (5) autre type | (6) void \n**Classe** : (0) Variable | (1) Fonction | (2) Parametre', icon="ℹ️")
-    df = pd.DataFrame( get_Table() ,columns=["Identifiant","Classe","Type","Initialise","Utilise","Nb Params"])
-    st.table(df)
+        lines = error.splitlines()
+        for line in lines:
+            if "warning" in line:
+                st.warning(line, icon="⚠️")
+            else:
+                st.error(line, icon="🚨")
+    st.subheader("Langage machine généré")
+    st.code(output, language="None", line_numbers=False)
 
 if btn2 :
     remove_files()

@@ -45,7 +45,7 @@ def execute_command(command , inputfile , outputfile ):
             # Handle the error
             print('error')
     
-    #removeStrings(outputfile,'COMMENT BLOCK')
+    remove_empty_lines(outputfile)
 
     return read_file(outputfile) , read_file("Compiler/Error.txt")
 

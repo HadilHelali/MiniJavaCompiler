@@ -48,6 +48,7 @@ ACCOLADE_Ouvrante ("{")
 ACCOLADE_Fermante ("}")
 POINT_VIRGULE ";"
 
+MC_VOID "void"
 MC_IF "if"
 MC_ELSE "else"
 MC_WHILE "while"
@@ -61,7 +62,7 @@ MC_LENGTH "length"
 MC_PUBLIC "public"
 MC_MAIN_CLASS "public static void main"
 
-Operation ("&&"|"<"|"+"|"-"|"*") 
+Operation ("&&"|"<"|"+"|"-"|"*"|"==") 
 Type ("String"|"int""[""]"|"boolean"|"int"|id)
 String_Tab "String""[""]"
 Op_Aff "="
@@ -85,11 +86,11 @@ Op_Aff "="
 {MC_LENGTH}                                                                          {return MC_LENGTH ;}
 {MC_PUBLIC}                                                                          {return MC_PUBLIC ;}
 {MC_MAIN_CLASS}                                                                      {return MC_MAIN_CLASS ;}
-{INTEGER_LITERAL}                                                                    {return INTEGER_LITERAL;}
+{INTEGER_LITERAL}                                                                    { yylval.ival = atoi(yytext); return INTEGER_LITERAL;}
 {Type}                                                                               {yylval.sval = strdup(yytext); return Type;}
 {id}                                                                                 {yylval.sval = strdup(yytext); return id;}
 {String_Tab}                                                                         {return String_Tab;}
-{Operation}                                                                          {return Operation;}
+{Operation}                                                                          {yylval.sval = strdup(yytext); return Operation;}
 {Parenthese_Ouvrante}                                                                {return Parenthese_Ouvrante;}
 {Parenthese_Fermante}                                                                {return Parenthese_Fermante;}
 {Crochet_Ouvrante}                                                                   {return Crochet_Ouvrante;}
@@ -100,7 +101,8 @@ Op_Aff "="
 {POINT_VIRGULE}                                                                      {return POINT_VIRGULE;}
 {Op_Aff}	                                                                           {return Op_Aff;}
 "."                                                                                  {return POINT;}
-
+","                                                                                  {return VIRGULE;}
+{MC_VOID}                                                                            {return MC_VOID;}
 {iderrone}                                                                           {fprintf(stderr,"illegal identifier \'%s\' on line :%d\n",yytext,yylineno);}
 {iderrone1}                                                                           {fprintf(stderr,"illegal identifier \'%s\' on line :%d\n",yytext,yylineno);}
 

@@ -37,6 +37,7 @@ int maxDico, sommet, base;
 int entree = 0 ;
 char* IdFun = "" ;
 int ligneFun = 0 ;
+int In_Fun = 0 ;
 
 void AfficherTab(){
  for (int i=0; i < sommet ; i++ ) {
@@ -60,6 +61,7 @@ void warning(char *message, int ligne)
 void CreateLocalDic()
 {
 base = sommet;
+In_Fun = 1 ;
 }
 
 // Destruction d'un dictionnaire local : base = sommet
@@ -73,6 +75,7 @@ base = 0;
 void creerDico() {
 maxDico = TAILLE_INITIALE_DICO;
 dico = malloc(maxDico * sizeof(ENTREE_DICO));
+
 if (dico == NULL)
      erreurFatale("Error : Erreur interne (pas assez de memoire)", 0);
 sommet = base = 0;
@@ -82,6 +85,7 @@ sommet = base = 0;
 void agrandirDico() {
 maxDico = maxDico + INCREMENT_TAILLE_DICO;
 dico = realloc(dico, maxDico);
+
 if (dico == NULL)
 erreurFatale("Error : Erreur interne (pas assez de memoire)", 0);
 }
@@ -123,6 +127,8 @@ dico[sommet].Is_used = Is_used;
 dico[sommet].Nb_param = Nb_param;
 sommet++;
 
+
+
 }
 
 // recherche d'un id 
@@ -145,7 +151,7 @@ void modifNbParam(char* identif , int nbParam){
     dico[index].Nb_param = nbParam ;
 }
 
-void modifIDType(char *identif, char *Type)
+/* void modifIDType(char *identif, char *Type)
 {
     int index = recherche("newFun");
     dico[index].identif = identif;
@@ -165,7 +171,7 @@ void modifIDType(char *identif, char *Type)
     if (strcmp(IdFun,identif) != 0){
     erreurFatale("Error : fonction non declaree", ligneFun);
     } }
-}
+} */
 
 // * Contrainte 1 : Vérifier la redéfinition des variables déjà déclarées
 void checkIdentifier(char *identif, classe Classe, char *Type, int Is_Init, int Is_used, int Nb_param, int ligne)
@@ -186,12 +192,21 @@ void checkNbParameters (char *identif, int Nb_param,int ligne) {
     int index = recherche (identif) ;
     if ((index == -1) && (recherche("newFun") == -1 ))
         erreurFatale("Error : fonction non declaree", ligne);
-    else 
-    {   IdFun = identif ;
-        ligneFun = ligne ;
-        if (Nb_param != dico[index].Nb_param)
-        erreurFatale("Error : fonction non declaree", ligne);
-    }
+    else {
+        if (recherche("newFun") != -1)
+        {
+        int indexNF = recherche("newFun") ;
+        if (Nb_param != dico[indexNF].Nb_param)
+            erreurFatale("Error : fonction non declaree", ligne);
+        IdFun = identif;
+        ligneFun = ligne;
+       }
+        else
+            {   
+                if (Nb_param != dico[index].Nb_param)
+                    erreurFatale("Error : fonction non declaree", ligne);
+            }
+        }
 }
 
 // * Contrainte 3 : Vérifier qu’une variable utilisée est bien déclarée.

@@ -1,0 +1,50 @@
+class  MAIN{
+public static void main( String[] args )
+{
+int a;
+a= 7;
+}
+
+}
+
+class  Test { 
+
+public int travailler(int a) 
+{
+int b;
+int i;
+int t;
+t = 2 ;
+i = 5 ;
+b =  98 + t;
+
+if (b ==  100)
+{
+	i=7;
+}
+else 
+{	b=4; }
+
+b=5+t;
+while (i <  6 ) 
+{
+i=14;
+}
+if (t ==  7)
+{
+	i=7;
+}
+else 
+{	b=4; }
+
+a=7;
+return 5;
+
+}
+
+public int afficher(){
+System.out.println(this.travailler(10,11)); 
+return 1 ; 
+}
+
+}
