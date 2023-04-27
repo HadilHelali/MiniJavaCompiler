@@ -47,6 +47,8 @@ gcc -o Compilateur lex.yy.c Syntaxique.tab.c
 ``` Shell
 Compilateur.exe < <Script.txt>
 ```
+### Demo video 
+[![Demo](./ScreenShot.png)](./Demo.mp4)
 
 ### Collaborators
 This project was developped by :
